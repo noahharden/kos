@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Dashboard - CloudRelay Gateway</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            color: #6b7280;
+        }
+        
+        .status-banner {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-weight: 600;
+        }
+        
+        .status-banner.healthy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-banner.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-banner.paused {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-fill.warning {
+            background: var(--warning);
+        }
+        
+        .progress-fill.danger {
+            background: var(--danger);
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-family: 'Courier New', monospace;
+            color: var(--primary);
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 2rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Usage Dashboard</h1>
+            <p>Real-time monitoring and quota management</p>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading dashboard data...</p>
+        </div>
+        
+        <div id="dashboard" style="display: none;">
+            <div id="status-banner" class="status-banner healthy">
+                <span>●</span>
+                <span id="status-text">All Systems Operational</span>
+            </div>
+            
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Bandwidth Usage</div>
+                    <div class="card-value" id="bandwidth-used">--</div>
+                    <div class="card-subtitle" id="bandwidth-percent">-- of 100 GB</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="bandwidth-progress"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Execution Time</div>
+                    <div class="card-value" id="execution-used">--</div>
+                    <div class="card-subtitle" id="execution-percent">-- of 100 GB-Hours</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="execution-progress"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Daily Invocations</div>
+                    <div class="card-value" id="invocations-today">--</div>
+                    <div class="card-subtitle" id="invocations-percent">-- of 1000</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="invocations-progress"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Total Requests</div>
+                    <div class="card-value" id="total-requests">--</div>
+                    <div class="card-subtitle">This month</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">System Metrics</div>
+                <div class="metric-row">
+                    <span class="metric-label">Service Status</span>
+                    <span class="metric-value" id="service-status">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Uptime</span>
+                    <span class="metric-value" id="uptime">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Error Rate</span>
+                    <span class="metric-value" id="error-rate">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Average Response Time</span>
+                    <span class="metric-value" id="avg-response">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Peak Concurrent</span>
+                    <span class="metric-value" id="peak-concurrent">--</span>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Quota Thresholds</div>
+                <div class="alert info">
+                    Service will automatically pause when usage reaches configured thresholds to prevent overages.
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Bandwidth Threshold</span>
+                    <span class="metric-value" id="bandwidth-threshold">85%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Execution Threshold</span>
+                    <span class="metric-value" id="execution-threshold">85%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Invocation Threshold</span>
+                    <span class="metric-value" id="invocation-threshold">90%</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="refreshData()" id="refresh-btn">
+                    🔄 Refresh Data
+                </button>
+            </div>
+            
+            <div class="timestamp">
+                Last updated: <span id="last-update">--</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefreshInterval;
+        
+        async function fetchHealthData() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch health data:', error);
+                throw error;
+            }
+        }
+        
+        function updateDashboard(data) {
+            // Hide loading, show dashboard
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            // Update status banner
+            const statusBanner = document.getElementById('status-banner');
+            const statusText = document.getElementById('status-text');
+            
+            if (data.status === 'paused') {
+                statusBanner.className = 'status-banner paused';
+                statusText.textContent = 'Service Paused - Quota Limit Reached';
+            } else if (data.quotaStatus?.usage?.bandwidth?.percent) {
+                const percent = parseFloat(data.quotaStatus.usage.bandwidth.percent);
+                if (percent > 70) {
+                    statusBanner.className = 'status-banner warning';
+                    statusText.textContent = `Warning: ${percent.toFixed(1)}% Bandwidth Used`;
+                } else {
+                    statusBanner.className = 'status-banner healthy';
+                    statusText.textContent = 'All Systems Operational';
+                }
+            }
+            
+            // Update bandwidth card
+            if (data.quotaStatus?.usage?.bandwidth) {
+                const bw = data.quotaStatus.usage.bandwidth;
+                document.getElementById('bandwidth-used').textContent = bw.used;
+                document.getElementById('bandwidth-percent').textContent = `${bw.percent} of ${bw.limit}`;
+                
+                const bwPercent = parseFloat(bw.percent);
+                const bwProgress = document.getElementById('bandwidth-progress');
+                bwProgress.style.width = `${bwPercent}%`;
+                bwProgress.className = 'progress-fill' + (bwPercent > 85 ? ' danger' : bwPercent > 70 ? ' warning' : '');
+            }
+            
+            // Update execution card
+            if (data.quotaStatus?.usage?.execution) {
+                const exec = data.quotaStatus.usage.execution;
+                document.getElementById('execution-used').textContent = exec.used;
+                document.getElementById('execution-percent').textContent = `${exec.percent} of ${exec.limit}`;
+                
+                const execPercent = parseFloat(exec.percent);
+                const execProgress = document.getElementById('execution-progress');
+                execProgress.style.width = `${execPercent}%`;
+                execProgress.className = 'progress-fill' + (execPercent > 85 ? ' danger' : execPercent > 70 ? ' warning' : '');
+            }
+            
+            // Update invocations card
+            if (data.quotaStatus?.usage?.invocations) {
+                const inv = data.quotaStatus.usage.invocations;
+                document.getElementById('invocations-today').textContent = inv.today.toLocaleString();
+                document.getElementById('invocations-percent').textContent = `${inv.percent} of ${inv.dailyLimit}`;
+                
+                const invPercent = parseFloat(inv.percent);
+                const invProgress = document.getElementById('invocations-progress');
+                invProgress.style.width = `${invPercent}%`;
+                invProgress.className = 'progress-fill' + (invPercent > 90 ? ' danger' : invPercent > 70 ? ' warning' : '');
+            }
+            
+            // Update total requests
+            if (data.stats?.totalRequests) {
+                document.getElementById('total-requests').textContent = data.stats.totalRequests.toLocaleString();
+            }
+            
+            // Update system metrics
+            document.getElementById('service-status').textContent = data.status === 'healthy' ? '✓ Online' : '⚠ Paused';
+            document.getElementById('uptime').textContent = formatUptime(data.uptime);
+            document.getElementById('error-rate').textContent = data.stats?.errorRate || '0%';
+            document.getElementById('avg-response').textContent = data.stats?.avgResponseTime || '--';
+            document.getElementById('peak-concurrent').textContent = data.stats?.peakConcurrent || '0';
+            
+            // Update thresholds
+            if (data.quotaStatus?.thresholds) {
+                document.getElementById('bandwidth-threshold').textContent = data.quotaStatus.thresholds.bandwidth;
+                document.getElementById('execution-threshold').textContent = data.quotaStatus.thresholds.execution;
+                document.getElementById('invocation-threshold').textContent = data.quotaStatus.thresholds.invocation;
+            }
+            
+            // Update timestamp
+            document.getElementById('last-update').textContent = new Date().toLocaleString();
+        }
+        
+        function formatUptime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days}d ${hours % 24}h`;
+            if (hours > 0) return `${hours}h ${minutes % 60}m`;
+            if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+            return `${seconds}s`;
+        }
+        
+        async function refreshData() {
+            const btn = document.getElementById('refresh-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Refreshing...';
+            
+            try {
+                const data = await fetchHealthData();
+                updateDashboard(data);
+                btn.textContent = '✓ Updated!';
+                setTimeout(() => {
+                    btn.textContent = '🔄 Refresh Data';
+                    btn.disabled = false;
+                }, 1000);
+            } catch (error) {
+                btn.textContent = '✗ Failed';
+                setTimeout(() => {
+                    btn.textContent = '🔄 Refresh Data';
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+        
+        // Initial load
+        window.addEventListener('load', async () => {
+            try {
+                const data = await fetchHealthData();
+                updateDashboard(data);
+                
+                // Auto-refresh every 30 seconds
+                autoRefreshInterval = setInterval(async () => {
+                    try {
+                        const data = await fetchHealthData();
+                        updateDashboard(data);
+                    } catch (error) {
+                        console.error('Auto-refresh failed:', error);
+                    }
+                }, 30000);
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ef4444;">
+                        <h3>Failed to load dashboard</h3>
+                        <p>${error.message}</p>
+                        <button class="btn" onclick="location.reload()">Retry</button>
+                    </div>
+                `;
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
