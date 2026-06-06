@@ -1,0 +1,35 @@
+{
+  "name": "cloudrelay-gateway",
+  "version": "10.0.0",
+  "description": "Professional API Gateway Service - Secure, Fast, and Reliable with Automatic Quota Protection",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "test": "node --test",
+    "health": "curl -s http://localhost:3000/health"
+  },
+  "keywords": [
+    "api-gateway",
+    "proxy",
+    "relay",
+    "vercel",
+    "edge-function",
+    "quota-protection",
+    "usage-tracking",
+    "professional",
+    "infrastructure"
+  ],
+  "author": "CloudRelay Solutions",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR-USERNAME/cloudrelay-gateway"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
